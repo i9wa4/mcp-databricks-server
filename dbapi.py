@@ -30,10 +30,9 @@ def get_auth_token() -> str:
     if use_oauth and host and client_id and client_secret:
         token_url = f"{host}/oidc/v1/token"
         data = {"grant_type": "client_credentials", "scope": "all-apis"}
-        async with httpx.AsyncClient() as client:
-            resp = await client.post(
-                token_url, data=data, auth=(client_id, client_secret), timeout=10
-            )
+        resp = requests.post(
+            token_url, data=data, auth=(client_id, client_secret), timeout=10
+        )
         resp.raise_for_status()
         access_token = resp.json().get("access_token")
         if access_token:

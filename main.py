@@ -1,10 +1,10 @@
-from typing import Optional
 from mcp.server.fastmcp import FastMCP
-from dbapi import execute_statement
-from databricks_formatter import format_query_results
 
+from databricks_formatter import format_query_results
+from dbapi import execute_statement
 
 mcp = FastMCP("databricks")
+
 
 @mcp.tool()
 async def execute_sql_query(sql: str) -> str:
@@ -36,7 +36,7 @@ async def list_schemas(catalog: str) -> str:
 @mcp.tool()
 async def list_tables(schema: str) -> str:
     """List all tables in a specific schema.
-    
+
     Args:
         schema: The schema name to list tables from
     """
@@ -51,7 +51,7 @@ async def list_tables(schema: str) -> str:
 @mcp.tool()
 async def describe_table(table_name: str) -> str:
     """Describe a table's schema.
-    
+
     Args:
         table_name: The fully qualified table name (e.g., schema.table_name)
     """
@@ -65,4 +65,4 @@ async def describe_table(table_name: str) -> str:
 
 if __name__ == "__main__":
     # Initialize and run the server
-    mcp.run(transport='stdio')
+    mcp.run(transport="stdio")

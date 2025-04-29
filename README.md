@@ -43,6 +43,10 @@ uv pip install -r requirements.txt
    DATABRICKS_HOST=your-databricks-instance.cloud.databricks.com
    DATABRICKS_TOKEN=your-databricks-access-token
    DATABRICKS_SQL_WAREHOUSE_ID=your-sql-warehouse-id
+   # for OAuth authentication
+   DATABRICKS_CLIENT_ID=your-client-id
+   DATABRICKS_CLIENT_SECRET=your-client-secret
+   DATABRICKS_AUTH_TYPE=oauth
    ```
 
    Option 2: Setting environment variables directly
@@ -51,6 +55,10 @@ uv pip install -r requirements.txt
    export DATABRICKS_HOST="your-databricks-instance.cloud.databricks.com"
    export DATABRICKS_TOKEN="your-databricks-access-token"
    export DATABRICKS_SQL_WAREHOUSE_ID="your-sql-warehouse-id"
+   # for OAuth authentication
+   export DATABRICKS_CLIENT_ID=your-client-id
+   export DATABRICKS_CLIENT_SECRET=your-client-secret
+   export DATABRICKS_AUTH_TYPE=oauth
    ```
 
 You can find your SQL warehouse ID in the Databricks UI under SQL Warehouses.
@@ -61,7 +69,7 @@ Before using this MCP server, ensure that:
 
 1. **SQL Warehouse Permissions**: The user associated with the provided token must have appropriate permissions to access the specified SQL warehouse. You can configure warehouse permissions in the Databricks UI under SQL Warehouses > [Your Warehouse] > Permissions.
 
-2. **Token Permissions**: The personal access token used should have the minimum necessary permissions to perform the required operations. It is strongly recommended to:
+2. **Token Permissions**: The personal access token (or OAuth access token) used should have the minimum necessary permissions to perform the required operations. It is strongly recommended to:
    - Create a dedicated token specifically for this application
    - Grant read-only permissions where possible to limit security risks
    - Avoid using tokens with workspace-wide admin privileges

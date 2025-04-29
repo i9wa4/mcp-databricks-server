@@ -56,9 +56,9 @@ uv pip install -r requirements.txt
    export DATABRICKS_TOKEN="your-databricks-access-token"
    export DATABRICKS_SQL_WAREHOUSE_ID="your-sql-warehouse-id"
    # for OAuth authentication
-   export DATABRICKS_CLIENT_ID=your-client-id
-   export DATABRICKS_CLIENT_SECRET=your-client-secret
-   export DATABRICKS_AUTH_TYPE=oauth
+   export DATABRICKS_CLIENT_ID="your-client-id"
+   export DATABRICKS_CLIENT_SECRET="your-client-secret"
+   export DATABRICKS_AUTH_TYPE="oauth"
    ```
 
 You can find your SQL warehouse ID in the Databricks UI under SQL Warehouses.

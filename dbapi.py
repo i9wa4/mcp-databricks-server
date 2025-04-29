@@ -5,7 +5,6 @@ from typing import Dict
 from typing import Optional
 
 import httpx
-import requests
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
@@ -21,32 +20,6 @@ STATEMENTS_API = "/api/2.0/sql/statements"
 STATEMENT_API = "/api/2.0/sql/statements/{statement_id}"
 
 
-def get_auth_token() -> str:
-    host = os.environ.get("DATABRICKS_HOST", "").rstrip("/")
-    client_id = os.environ.get("DATABRICKS_CLIENT_ID")
-    client_secret = os.environ.get("DATABRICKS_CLIENT_SECRET")
-    use_oauth = os.environ.get("DATABRICKS_AUTH_TYPE", "").lower() == "oauth"
-
-    if use_oauth and host and client_id and client_secret:
-        token_url = f"{host}/oidc/v1/token"
-        data = {"grant_type": "client_credentials", "scope": "all-apis"}
-        async with httpx.AsyncClient() as client:
-            resp = await client.post(
-                token_url, data=data, auth=(client_id, client_secret), timeout=10
-            )
-        resp.raise_for_status()
-        access_token = resp.json().get("access_token")
-        if access_token:
-            return f"Bearer {access_token}"
-        else:
-            raise Exception("Failed to get access token from Databricks OAuth")
-    # Fallback: PAT
-    token = os.environ.get("DATABRICKS_TOKEN")
-    if token:
-        return f"Bearer {token}"
-    raise Exception("No valid Databricks authentication found")
-
-
 async def make_databricks_request(
     method: str,
     endpoint: str,
@@ -56,7 +29,7 @@ async def make_databricks_request(
     """Make a request to the Databricks API with proper error handling."""
     url = f"{DATABRICKS_HOST}{endpoint}"
     headers = {
-        "Authorization": get_auth_token(),
+        "Authorization": f"Bearer {DATABRICKS_TOKEN}",
         "Content-Type": "application/json",
     }
 

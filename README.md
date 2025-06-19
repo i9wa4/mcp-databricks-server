@@ -36,9 +36,9 @@ uv pip install -r requirements.txt
 2. Set up your environment variables:
 
    Option 1: Using a .env file (recommended)
-   
+
    Create a .env file with your Databricks credentials:
-   
+
    ```
    DATABRICKS_HOST=your-databricks-instance.cloud.databricks.com
    DATABRICKS_TOKEN=your-databricks-access-token
@@ -50,7 +50,7 @@ uv pip install -r requirements.txt
    ```
 
    Option 2: Setting environment variables directly
-   
+
    ```bash
    export DATABRICKS_HOST="your-databricks-instance.cloud.databricks.com"
    export DATABRICKS_TOKEN="your-databricks-access-token"
@@ -147,24 +147,24 @@ Now you can use the Databricks MCP server directly within Cursor's AI assistant.
 
 The server provides the following tools:
 
-1. `execute_sql_query`: Execute a SQL query and return the results
+1. `execute_sql_query_in_databricks`: Execute a SQL query and return the results
    ```
-   execute_sql_query(sql: str) -> str
-   ```
-
-2. `list_schemas`: List all available schemas in a specific catalog
-   ```
-   list_schemas(catalog: str) -> str
+   execute_sql_query_in_databricks(sql: str) -> str
    ```
 
-3. `list_tables`: List all tables in a specific schema
+2. `list_schemas_in_databricks`: List all available schemas in a specific catalog
    ```
-   list_tables(schema: str) -> str
+   list_schemas_in_databricks(catalog: str) -> str
    ```
 
-4. `describe_table`: Describe a table's schema
+3. `list_tables_in_databricks`: List all tables in a specific schema
    ```
-   describe_table(table_name: str) -> str
+   list_tables_in_databricks(schema: str) -> str
+   ```
+
+4. `describe_table_in_databricks`: Describe a table's schema
+   ```
+   describe_table_in_databricks(table_name: str) -> str
    ```
 
 ## Example Usage
@@ -172,10 +172,10 @@ The server provides the following tools:
 In Agent Composer or other MCP clients, you can use these tools like:
 
 ```
-execute_sql_query("SELECT * FROM my_schema.my_table LIMIT 10")
-list_schemas("my_catalog")
-list_tables("my_catalog.my_schema")
-describe_table("my_catalog.my_schema.my_table")
+execute_sql_query_in_databricks("SELECT * FROM my_schema.my_table LIMIT 10")
+list_schemas_in_databricks("my_catalog")
+list_tables_in_databricks("my_catalog.my_schema")
+describe_table_in_databricks("my_catalog.my_schema.my_table")
 ```
 
 ## Handling Long-Running Queries

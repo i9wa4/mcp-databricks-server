@@ -7,7 +7,7 @@ mcp = FastMCP("databricks")
 
 
 @mcp.tool()
-async def execute_sql_query(sql: str) -> str:
+async def execute_sql_query_in_databricks(sql: str) -> str:
     """Execute a SQL query on Databricks and return the results.
     Args:
         sql: The SQL query to execute
@@ -20,7 +20,7 @@ async def execute_sql_query(sql: str) -> str:
 
 
 @mcp.tool()
-async def list_schemas(catalog: str) -> str:
+async def list_schemas_in_databricks(catalog: str) -> str:
     """List all available schemas in a Databricks catalog.
     Args:
         catalog: The catalog name to list schemas from
@@ -34,7 +34,7 @@ async def list_schemas(catalog: str) -> str:
 
 
 @mcp.tool()
-async def list_tables(schema: str) -> str:
+async def list_tables_in_databricks(schema: str) -> str:
     """List all tables in a specific schema.
 
     Args:
@@ -49,7 +49,7 @@ async def list_tables(schema: str) -> str:
 
 
 @mcp.tool()
-async def describe_table(table_name: str) -> str:
+async def describe_table_in_databricks(table_name: str) -> str:
     """Describe a table's schema.
 
     Args:

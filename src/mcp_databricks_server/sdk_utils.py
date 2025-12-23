@@ -22,7 +22,7 @@ from databricks.sdk.service.sql import (
 )
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv(override=True)
 
 DATABRICKS_HOST = os.environ.get("DATABRICKS_HOST")
 DATABRICKS_TOKEN = os.environ.get("DATABRICKS_TOKEN")
@@ -38,11 +38,13 @@ def _get_sdk_client() -> WorkspaceClient:
         raise ValueError(msg)
 
     # OAuth M2M (Service Principal) takes precedence if both credentials are set
+    # Use auth_type to explicitly select authentication method and avoid conflicts
     if DATABRICKS_CLIENT_ID and DATABRICKS_CLIENT_SECRET:
         config = Config(
             host=DATABRICKS_HOST,
             client_id=DATABRICKS_CLIENT_ID,
             client_secret=DATABRICKS_CLIENT_SECRET,
+            auth_type="oauth-m2m",
             http_timeout_seconds=30,
             retry_timeout_seconds=60,
         )
@@ -50,6 +52,7 @@ def _get_sdk_client() -> WorkspaceClient:
         config = Config(
             host=DATABRICKS_HOST,
             token=DATABRICKS_TOKEN,
+            auth_type="pat",
             http_timeout_seconds=30,
             retry_timeout_seconds=60,
         )

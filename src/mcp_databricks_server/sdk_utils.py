@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
+import configparser
 import json
 import os
 import time
+from pathlib import Path
 from typing import Any
 
 from databricks.sdk import WorkspaceClient
-from databricks.sdk.core import Config
 from databricks.sdk.service.catalog import (
     CatalogInfo,
     ColumnInfo,
@@ -20,44 +21,61 @@ from databricks.sdk.service.sql import (
     StatementResponse,
     StatementState,
 )
-from dotenv import load_dotenv
 
-load_dotenv()
 
-DATABRICKS_HOST = os.environ.get("DATABRICKS_HOST")
-DATABRICKS_TOKEN = os.environ.get("DATABRICKS_TOKEN")
-DATABRICKS_SQL_WAREHOUSE_ID = os.environ.get("DATABRICKS_SQL_WAREHOUSE_ID")
-DATABRICKS_CLIENT_ID = os.environ.get("DATABRICKS_CLIENT_ID")
-DATABRICKS_CLIENT_SECRET = os.environ.get("DATABRICKS_CLIENT_SECRET")
+def _get_warehouse_id() -> str | None:
+    """Get Warehouse ID from environment variable or ~/.databrickscfg.
+
+    Priority:
+    1. DATABRICKS_SQL_WAREHOUSE_ID environment variable
+    2. warehouse_id from ~/.databrickscfg (using DATABRICKS_CONFIG_PROFILE)
+    """
+    # Check environment variable first
+    warehouse_id = os.environ.get("DATABRICKS_SQL_WAREHOUSE_ID")
+    if warehouse_id:
+        return warehouse_id
+
+    # Read from ~/.databrickscfg
+    databrickscfg_path = Path.home() / ".databrickscfg"
+    if not databrickscfg_path.exists():
+        return None
+
+    profile = os.environ.get("DATABRICKS_CONFIG_PROFILE", "DEFAULT")
+    parser = configparser.ConfigParser(strict=False)
+    try:
+        parser.read(databrickscfg_path)
+    except configparser.Error:
+        return None
+
+    if profile not in parser:
+        return None
+
+    return parser[profile].get("warehouse_id")
+
+
+# Lazy initialization of Warehouse ID
+_warehouse_id: str | None = None
+
+
+def get_warehouse_id() -> str | None:
+    """Get or initialize the Warehouse ID (lazy initialization)."""
+    global _warehouse_id
+    if _warehouse_id is None:
+        _warehouse_id = _get_warehouse_id()
+    return _warehouse_id
 
 
 def _get_sdk_client() -> WorkspaceClient:
-    """Create and return a Databricks SDK client with appropriate authentication."""
-    if not DATABRICKS_HOST:
-        msg = "DATABRICKS_HOST must be set in environment variables or .env file"
-        raise ValueError(msg)
+    """Create and return a Databricks SDK client.
 
-    # OAuth M2M (Service Principal) takes precedence if both credentials are set
-    if DATABRICKS_CLIENT_ID and DATABRICKS_CLIENT_SECRET:
-        config = Config(
-            host=DATABRICKS_HOST,
-            client_id=DATABRICKS_CLIENT_ID,
-            client_secret=DATABRICKS_CLIENT_SECRET,
-            http_timeout_seconds=30,
-            retry_timeout_seconds=60,
-        )
-    elif DATABRICKS_TOKEN:
-        config = Config(
-            host=DATABRICKS_HOST,
-            token=DATABRICKS_TOKEN,
-            http_timeout_seconds=30,
-            retry_timeout_seconds=60,
-        )
-    else:
-        msg = "Either DATABRICKS_TOKEN or OAuth credentials must be set"
-        raise ValueError(msg)
+    Authentication is resolved from ~/.databrickscfg using the profile
+    specified by DATABRICKS_CONFIG_PROFILE environment variable (default: DEFAULT).
 
-    return WorkspaceClient(config=config)
+    Using explicit profile parameter ensures that conflicting environment
+    variables (e.g., both TOKEN and CLIENT_ID/SECRET) are ignored.
+    """
+    profile = os.environ.get("DATABRICKS_CONFIG_PROFILE", "DEFAULT")
+    return WorkspaceClient(profile=profile)
 
 
 # Lazy initialization of SDK client
@@ -305,10 +323,10 @@ def clear_lineage_cache() -> None:
 
 def _get_table_lineage(table_full_name: str) -> dict[str, Any]:
     """Retrieve table lineage information for a given table."""
-    if not DATABRICKS_SQL_WAREHOUSE_ID:
+    if not get_warehouse_id():
         return {
             "status": "error",
-            "error": "DATABRICKS_SQL_WAREHOUSE_ID is not set. Cannot fetch lineage.",
+            "error": "sql_warehouse_id is not configured. Cannot fetch lineage.",
         }
 
     lineage_sql_query = f"""
@@ -372,6 +390,32 @@ def _format_single_table_md(
     return table_markdown_parts
 
 
+# Blocked SQL keywords for safety (prevent destructive operations)
+BLOCKED_SQL_KEYWORDS = frozenset(
+    [
+        "DROP",
+        "DELETE",
+        "TRUNCATE",
+        "ALTER",
+        "CREATE",
+        "INSERT",
+        "UPDATE",
+        "MERGE",
+        "GRANT",
+        "REVOKE",
+    ]
+)
+
+
+def _is_dangerous_sql(sql_query: str) -> str | None:
+    """Check if SQL contains dangerous keywords. Returns the keyword if found."""
+    normalized = sql_query.upper().split()
+    for keyword in BLOCKED_SQL_KEYWORDS:
+        if keyword in normalized:
+            return keyword
+    return None
+
+
 def execute_databricks_sql(
     sql_query: str,
     max_wait_seconds: int = 600,
@@ -384,15 +428,29 @@ def execute_databricks_sql(
         max_wait_seconds: Max wait time for query completion (default: 600s)
         poll_interval_seconds: Interval between status checks (default: 10s)
     """
-    if not DATABRICKS_SQL_WAREHOUSE_ID:
-        err = "DATABRICKS_SQL_WAREHOUSE_ID is not set. Cannot execute SQL query."
+    # Block dangerous SQL commands
+    blocked_keyword = _is_dangerous_sql(sql_query)
+    if blocked_keyword:
+        error_msg = (
+            f"[Databricks MCP Server] Blocked: '{blocked_keyword}' statements are "
+            "not allowed for safety reasons."
+        )
+        print(error_msg)
+        return {
+            "status": "error",
+            "error": error_msg,
+        }
+
+    warehouse_id = get_warehouse_id()
+    if not warehouse_id:
+        err = "sql_warehouse_id is not configured. Cannot execute SQL query."
         return {"status": "error", "error": err}
 
     try:
         client = get_sdk_client()
         response: StatementResponse = client.statement_execution.execute_statement(
             statement=sql_query,
-            warehouse_id=DATABRICKS_SQL_WAREHOUSE_ID,
+            warehouse_id=warehouse_id,
             wait_timeout="50s",
             on_wait_timeout=ExecuteStatementRequestOnWaitTimeout.CONTINUE,
         )
@@ -479,8 +537,8 @@ def get_uc_table_details(full_table_name: str, include_lineage: bool = False) ->
 
     if include_lineage:
         markdown_parts.extend(["", "## Lineage Information"])
-        if not DATABRICKS_SQL_WAREHOUSE_ID:
-            skip_msg = "- *Lineage skipped: `DATABRICKS_SQL_WAREHOUSE_ID` not set.*"
+        if not get_warehouse_id():
+            skip_msg = "- *Lineage skipped: `sql_warehouse_id` not configured.*"
             markdown_parts.append(skip_msg)
         else:
             lineage_info = _get_table_lineage(full_table_name)

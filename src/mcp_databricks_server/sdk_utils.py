@@ -431,9 +431,14 @@ def execute_databricks_sql(
     # Block dangerous SQL commands
     blocked_keyword = _is_dangerous_sql(sql_query)
     if blocked_keyword:
+        error_msg = (
+            f"[Databricks MCP Server] Blocked: '{blocked_keyword}' statements are "
+            "not allowed for safety reasons."
+        )
+        print(error_msg)
         return {
             "status": "error",
-            "error": f"Blocked: '{blocked_keyword}' statements are not allowed.",
+            "error": error_msg,
         }
 
     warehouse_id = get_warehouse_id()

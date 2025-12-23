@@ -12,6 +12,17 @@ Built with [Databricks SDK for Python](https://docs.databricks.com/en/dev-tools/
 - Describe table schemas
 - Unity Catalog metadata exploration (catalogs, schemas, tables)
 - Table lineage information (upstream/downstream tables, notebooks)
+- Block dangerous SQL commands for safety. The following statements are blocked:
+    - DROP
+    - DELETE
+    - TRUNCATE
+    - ALTER
+    - CREATE
+    - INSERT
+    - UPDATE
+    - MERGE
+    - GRANT
+    - REVOKE
 
 ## 2. Setup
 

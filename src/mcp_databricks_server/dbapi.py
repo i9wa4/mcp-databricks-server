@@ -1,8 +1,8 @@
+"""Databricks SQL Statement Execution API client."""
+
 import asyncio
 import os
 from typing import Any
-from typing import Dict
-from typing import Optional
 
 import httpx
 import requests
@@ -22,6 +22,7 @@ STATEMENT_API = "/api/2.0/sql/statements/{statement_id}"
 
 
 def get_auth_token() -> str:
+    """Get authentication token for Databricks API."""
     host = os.environ.get("DATABRICKS_HOST", "").rstrip("/")
     client_id = os.environ.get("DATABRICKS_CLIENT_ID")
     client_secret = os.environ.get("DATABRICKS_CLIENT_SECRET")
@@ -37,21 +38,22 @@ def get_auth_token() -> str:
         access_token = resp.json().get("access_token")
         if access_token:
             return f"Bearer {access_token}"
-        else:
-            raise Exception("Failed to get access token from Databricks OAuth")
+        msg = "Failed to get access token from Databricks OAuth"
+        raise RuntimeError(msg)
     # Fallback: PAT
     token = os.environ.get("DATABRICKS_TOKEN")
     if token:
         return f"Bearer {token}"
-    raise Exception("No valid Databricks authentication found")
+    msg = "No valid Databricks authentication found"
+    raise RuntimeError(msg)
 
 
 async def make_databricks_request(
     method: str,
     endpoint: str,
-    json_data: Optional[Dict[str, Any]] = None,
-    params: Optional[Dict[str, Any]] = None,
-) -> Dict[str, Any]:
+    json_data: dict[str, Any] | None = None,
+    params: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     """Make a request to the Databricks API with proper error handling."""
     url = f"{DATABRICKS_HOST}{endpoint}"
     headers = {
@@ -70,34 +72,39 @@ async def make_databricks_request(
                     url, headers=headers, json=json_data, timeout=30.0
                 )
             else:
-                raise ValueError(f"Unsupported HTTP method: {method}")
+                msg = f"Unsupported HTTP method: {method}"
+                raise ValueError(msg)
 
             response.raise_for_status()
-            return response.json()
+            return response.json()  # type: ignore[no-any-return]
         except httpx.HTTPStatusError as e:
             error_message = f"HTTP error: {e.response.status_code}"
             try:
                 error_detail = e.response.json()
                 error_message += f" - {error_detail.get('message', '')}"
-            except Exception:
-                pass
-            raise Exception(error_message)
+            except (ValueError, KeyError):
+                # JSON parsing failed or 'message' key not found
+                # Use the basic error message without details
+                error_message += f" - {e.response.text[:200]}"
+            raise RuntimeError(error_message) from e
         except Exception as e:
-            raise Exception(f"Error making request to Databricks API: {str(e)}")
+            msg = f"Error making request to Databricks API: {e!s}"
+            raise RuntimeError(msg) from e
 
 
 async def execute_statement(
-    sql: str, warehouse_id: Optional[str] = None
-) -> Dict[str, Any]:
+    sql: str, warehouse_id: str | None = None
+) -> dict[str, Any]:
     """Execute a SQL statement and wait for its completion."""
     if not warehouse_id:
         warehouse_id = DATABRICKS_SQL_WAREHOUSE_ID
 
     if not warehouse_id:
-        raise ValueError(
+        msg = (
             "Warehouse ID is required. Set DATABRICKS_SQL_WAREHOUSE_ID environment"
             " variable or provide it as a parameter."
         )
+        raise ValueError(msg)
 
     # Create the statement
     statement_data = {
@@ -112,7 +119,8 @@ async def execute_statement(
     statement_id = response.get("statement_id")
 
     if not statement_id:
-        raise Exception("Failed to get statement ID from response")
+        msg = "Failed to get statement ID from response"
+        raise RuntimeError(msg)
 
     # Poll for statement completion
     max_retries = 60  # Maximum number of retries (10 minutes with 10-second intervals)
@@ -127,16 +135,18 @@ async def execute_statement(
 
         if status == "SUCCEEDED":
             return statement_status
-        elif status in ["FAILED", "CANCELED"]:
+        if status in ["FAILED", "CANCELED"]:
             error_message = (
                 statement_status.get("status", {})
                 .get("error", {})
                 .get("message", "Unknown error")
             )
-            raise Exception(f"Statement execution failed: {error_message}")
+            msg = f"Statement execution failed: {error_message}"
+            raise RuntimeError(msg)
 
         # Wait before polling again
         await asyncio.sleep(10)
         retry_count += 1
 
-    raise Exception("Statement execution timed out")
+    msg = "Statement execution timed out"
+    raise TimeoutError(msg)

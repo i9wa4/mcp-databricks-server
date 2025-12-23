@@ -1,16 +1,16 @@
+"""Format Databricks query results for display."""
+
 from typing import Any
-from typing import Dict
 
 
-def format_query_results(result: Dict[str, Any]) -> str:
+def format_query_results(result: dict[str, Any]) -> str:
     """Format query results into a readable string."""
-
     # Check if result is empty or doesn't have the expected structure
     if not result or "manifest" not in result or "result" not in result:
         return "No results or invalid result format."
 
     # Extract column names from the manifest
-    column_names = []
+    column_names: list[str] = []
     if (
         "manifest" in result
         and "schema" in result["manifest"]
@@ -24,7 +24,7 @@ def format_query_results(result: Dict[str, Any]) -> str:
         return "No columns found in the result."
 
     # Extract rows from the result
-    rows = []
+    rows: list[list[Any]] = []
     if "result" in result and "data_array" in result["result"]:
         rows = result["result"]["data_array"]
 

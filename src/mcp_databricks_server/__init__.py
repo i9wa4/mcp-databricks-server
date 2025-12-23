@@ -1,7 +1,11 @@
+"""MCP server for executing SQL queries against Databricks."""
+
 from mcp.server.fastmcp import FastMCP
 
-from databricks_formatter import format_query_results
-from dbapi import execute_statement
+from mcp_databricks_server.dbapi import execute_statement
+from mcp_databricks_server.formatter import format_query_results
+
+__all__ = ["main", "mcp"]
 
 mcp = FastMCP("databricks")
 
@@ -9,6 +13,7 @@ mcp = FastMCP("databricks")
 @mcp.tool()
 async def execute_sql_query_in_databricks(sql: str) -> str:
     """Execute a SQL query on Databricks and return the results.
+
     Args:
         sql: The SQL query to execute
     """
@@ -16,12 +21,13 @@ async def execute_sql_query_in_databricks(sql: str) -> str:
         result = await execute_statement(sql)
         return format_query_results(result)
     except Exception as e:
-        return f"Error executing SQL query: {str(e)}"
+        return f"Error executing SQL query: {e!s}"
 
 
 @mcp.tool()
 async def list_schemas_in_databricks(catalog: str) -> str:
     """List all available schemas in a Databricks catalog.
+
     Args:
         catalog: The catalog name to list schemas from
     """
@@ -30,7 +36,7 @@ async def list_schemas_in_databricks(catalog: str) -> str:
         result = await execute_statement(sql)
         return format_query_results(result)
     except Exception as e:
-        return f"Error listing schemas: {str(e)}"
+        return f"Error listing schemas: {e!s}"
 
 
 @mcp.tool()
@@ -45,7 +51,7 @@ async def list_tables_in_databricks(schema: str) -> str:
         result = await execute_statement(sql)
         return format_query_results(result)
     except Exception as e:
-        return f"Error listing tables: {str(e)}"
+        return f"Error listing tables: {e!s}"
 
 
 @mcp.tool()
@@ -60,9 +66,9 @@ async def describe_table_in_databricks(table_name: str) -> str:
         result = await execute_statement(sql)
         return format_query_results(result)
     except Exception as e:
-        return f"Error describing table: {str(e)}"
+        return f"Error describing table: {e!s}"
 
 
-if __name__ == "__main__":
-    # Initialize and run the server
+def main() -> None:
+    """Run the MCP server."""
     mcp.run(transport="stdio")

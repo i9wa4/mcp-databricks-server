@@ -11,10 +11,7 @@ license = "MIT"
 requires-python = ">=3.11"
 dependencies = [
     "databricks-sdk>=0.76.0",
-    "httpx>=0.28.0",
     "mcp[cli]>=1.25.0",
-    "python-dotenv>=1.2.0",
-    "requests>=2.32.0",
 ]
 
 [project.scripts]
@@ -26,7 +23,6 @@ dev = [
     "pytest>=9.0.0",
     "pytest-cov>=7.0.0",
     "ruff>=0.14.0",
-    "types-requests>=2.32.0",
 ]
 
 [tool.ruff]

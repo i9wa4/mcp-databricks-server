@@ -10,6 +10,7 @@ readme = "README.md"
 license = "MIT"
 requires-python = ">=3.11"
 dependencies = [
+    "databricks-sdk>=0.40.0",
     "httpx>=0.28.0",
     "mcp[cli]>=1.25.0",
     "python-dotenv>=1.2.0",
@@ -59,7 +60,7 @@ warn_return_any = true
 warn_unused_configs = true
 
 [[tool.mypy.overrides]]
-module = "mcp.*"
+module = ["mcp.*", "databricks.*"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]

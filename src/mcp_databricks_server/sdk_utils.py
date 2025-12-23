@@ -372,6 +372,32 @@ def _format_single_table_md(
     return table_markdown_parts
 
 
+# Blocked SQL keywords for safety (prevent destructive operations)
+BLOCKED_SQL_KEYWORDS = frozenset(
+    [
+        "DROP",
+        "DELETE",
+        "TRUNCATE",
+        "ALTER",
+        "CREATE",
+        "INSERT",
+        "UPDATE",
+        "MERGE",
+        "GRANT",
+        "REVOKE",
+    ]
+)
+
+
+def _is_dangerous_sql(sql_query: str) -> str | None:
+    """Check if SQL contains dangerous keywords. Returns the keyword if found."""
+    normalized = sql_query.upper().split()
+    for keyword in BLOCKED_SQL_KEYWORDS:
+        if keyword in normalized:
+            return keyword
+    return None
+
+
 def execute_databricks_sql(
     sql_query: str,
     max_wait_seconds: int = 600,
@@ -384,6 +410,14 @@ def execute_databricks_sql(
         max_wait_seconds: Max wait time for query completion (default: 600s)
         poll_interval_seconds: Interval between status checks (default: 10s)
     """
+    # Block dangerous SQL commands
+    blocked_keyword = _is_dangerous_sql(sql_query)
+    if blocked_keyword:
+        return {
+            "status": "error",
+            "error": f"Blocked: '{blocked_keyword}' statements are not allowed.",
+        }
+
     if not DATABRICKS_SQL_WAREHOUSE_ID:
         err = "DATABRICKS_SQL_WAREHOUSE_ID is not set. Cannot execute SQL query."
         return {"status": "error", "error": err}

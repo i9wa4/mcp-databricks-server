@@ -5,12 +5,12 @@ build-backend = "hatchling.build"
 [project]
 name = "mcp-databricks-server"
 version = "0.1.0"
-description = "MCP server for executing SQL queries against Databricks"
+description = "Databricks MCP Server"
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.11"
 dependencies = [
-    "databricks-sdk>=0.40.0",
+    "databricks-sdk>=0.76.0",
     "httpx>=0.28.0",
     "mcp[cli]>=1.25.0",
     "python-dotenv>=1.2.0",

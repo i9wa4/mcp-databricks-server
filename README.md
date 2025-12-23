@@ -2,6 +2,8 @@
 
 MCP server for executing SQL queries on Databricks.
 
+Built with [Databricks SDK for Python](https://docs.databricks.com/en/dev-tools/sdk-python.html).
+
 ## 1. Features
 
 - Execute SQL queries on Databricks
@@ -36,7 +38,6 @@ DATABRICKS_SQL_WAREHOUSE_ID=your-sql-warehouse-id
 DATABRICKS_TOKEN=your-databricks-access-token
 
 # Option B: OAuth (Service Principal)
-DATABRICKS_AUTH_TYPE=oauth
 DATABRICKS_CLIENT_ID=your-client-id
 DATABRICKS_CLIENT_SECRET=your-client-secret
 ```

@@ -15,7 +15,11 @@ from databricks.sdk.service.catalog import (
     SchemaInfo,
     TableInfo,
 )
-from databricks.sdk.service.sql import StatementResponse, StatementState
+from databricks.sdk.service.sql import (
+    ExecuteStatementRequestOnWaitTimeout,
+    StatementResponse,
+    StatementState,
+)
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -25,7 +29,6 @@ DATABRICKS_TOKEN = os.environ.get("DATABRICKS_TOKEN")
 DATABRICKS_SQL_WAREHOUSE_ID = os.environ.get("DATABRICKS_SQL_WAREHOUSE_ID")
 DATABRICKS_CLIENT_ID = os.environ.get("DATABRICKS_CLIENT_ID")
 DATABRICKS_CLIENT_SECRET = os.environ.get("DATABRICKS_CLIENT_SECRET")
-DATABRICKS_AUTH_TYPE = os.environ.get("DATABRICKS_AUTH_TYPE")
 
 
 def _get_sdk_client() -> WorkspaceClient:
@@ -34,12 +37,8 @@ def _get_sdk_client() -> WorkspaceClient:
         msg = "DATABRICKS_HOST must be set in environment variables or .env file"
         raise ValueError(msg)
 
-    is_oauth = (
-        DATABRICKS_AUTH_TYPE == "oauth"
-        and DATABRICKS_CLIENT_ID
-        and DATABRICKS_CLIENT_SECRET
-    )
-    if is_oauth:
+    # OAuth M2M (Service Principal) takes precedence if both credentials are set
+    if DATABRICKS_CLIENT_ID and DATABRICKS_CLIENT_SECRET:
         config = Config(
             host=DATABRICKS_HOST,
             client_id=DATABRICKS_CLIENT_ID,
@@ -207,12 +206,16 @@ def _process_lineage_results(
         "notebooks_writing": [],
     }
 
-    if (
-        not lineage_query_output
-        or lineage_query_output.get("status") != "success"
-        or not isinstance(lineage_query_output.get("data"), list)
-    ):
+    if not lineage_query_output or lineage_query_output.get("status") != "success":
         return processed_data
+
+    # Convert rows + columns to list of dicts
+    columns = lineage_query_output.get("columns", [])
+    rows = lineage_query_output.get("rows", [])
+    if not columns or not rows:
+        return processed_data
+
+    data_rows = [dict(zip(columns, row, strict=False)) for row in rows]
 
     upstream_set: set[str] = set()
     downstream_set: set[str] = set()
@@ -222,7 +225,7 @@ def _process_lineage_results(
     unique_job_ids: set[str] = set()
     notebook_job_pairs: list[dict[str, Any]] = []
 
-    for row in lineage_query_output["data"]:
+    for row in data_rows:
         source_table = row.get("source_table_full_name")
         target_table = row.get("target_table_full_name")
         entity_metadata = row.get("entity_metadata")
@@ -316,7 +319,7 @@ def _get_table_lineage(table_full_name: str) -> dict[str, Any]:
        OR target_table_full_name = '{table_full_name}'
     ORDER BY event_time DESC LIMIT 100;
     """  # noqa: S608
-    raw_lineage_output = execute_databricks_sql(lineage_sql_query, wait_timeout="50s")
+    raw_lineage_output = execute_databricks_sql(lineage_sql_query)
     return _process_lineage_results(raw_lineage_output, table_full_name)
 
 
@@ -369,8 +372,18 @@ def _format_single_table_md(
     return table_markdown_parts
 
 
-def execute_databricks_sql(sql_query: str, wait_timeout: str = "50s") -> dict[str, Any]:
-    """Execute a SQL query on Databricks using the SDK client."""
+def execute_databricks_sql(
+    sql_query: str,
+    max_wait_seconds: int = 600,
+    poll_interval_seconds: int = 10,
+) -> dict[str, Any]:
+    """Execute a SQL query on Databricks using the SDK client.
+
+    Args:
+        sql_query: The SQL query to execute
+        max_wait_seconds: Max wait time for query completion (default: 600s)
+        poll_interval_seconds: Interval between status checks (default: 10s)
+    """
     if not DATABRICKS_SQL_WAREHOUSE_ID:
         err = "DATABRICKS_SQL_WAREHOUSE_ID is not set. Cannot execute SQL query."
         return {"status": "error", "error": err}
@@ -380,29 +393,50 @@ def execute_databricks_sql(sql_query: str, wait_timeout: str = "50s") -> dict[st
         response: StatementResponse = client.statement_execution.execute_statement(
             statement=sql_query,
             warehouse_id=DATABRICKS_SQL_WAREHOUSE_ID,
-            wait_timeout=wait_timeout,
+            wait_timeout="50s",
+            on_wait_timeout=ExecuteStatementRequestOnWaitTimeout.CONTINUE,
         )
+
+        # Poll for completion if still pending
+        elapsed_seconds = 0
+        while (
+            response.status
+            and response.status.state == StatementState.PENDING
+            and elapsed_seconds < max_wait_seconds
+        ):
+            time.sleep(poll_interval_seconds)
+            elapsed_seconds += poll_interval_seconds
+            if response.statement_id:
+                response = client.statement_execution.get_statement(
+                    response.statement_id
+                )
+
+        # Check if timed out while still pending
+        if response.status and response.status.state == StatementState.PENDING:
+            return {
+                "status": "failed",
+                "error": f"Query timed out after {max_wait_seconds} seconds",
+            }
 
         if response.status and response.status.state == StatementState.SUCCEEDED:
             if response.result and response.result.data_array:
                 manifest = response.manifest
-                column_names: list[str | None] = []
+                column_names: list[str] = []
                 if manifest and manifest.schema and manifest.schema.columns:
-                    column_names = [col.name for col in manifest.schema.columns]
-                results = [
-                    dict(zip(column_names, row, strict=False))
-                    for row in response.result.data_array
-                ]
+                    column_names = [col.name or "" for col in manifest.schema.columns]
+                raw_rows = response.result.data_array
                 return {
                     "status": "success",
-                    "row_count": len(results),
-                    "data": results,
+                    "row_count": len(raw_rows),
+                    "columns": column_names,
+                    "rows": raw_rows,
                 }
             else:
                 return {
                     "status": "success",
                     "row_count": 0,
-                    "data": [],
+                    "columns": [],
+                    "rows": [],
                     "message": "Query succeeded but returned no data.",
                 }
         elif response.status:

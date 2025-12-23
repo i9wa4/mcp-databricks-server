@@ -59,20 +59,22 @@ Example MCP Server configuration:
 
 ```json
 {
-    "mcpServers": {
-        "databricks": {
-            "command": "uv",
-            "args": [
-                "--directory",
-                "/path/to/mcp-databricks-server",
-                "run",
-                "mcp-databricks-server"
-            ],
-            "env": {
-                "DATABRICKS_CONFIG_PROFILE": "DEFAULT"
-            }
-        }
+  "mcpServers": {
+    "databricks": {
+      "type": "stdio",
+      "command": "uv",
+      "args": [
+        "--directory",
+        "/path/to/mcp-databricks-server",
+        "run",
+        "mcp-databricks-server"
+      ],
+      "env": {
+        "DATABRICKS_CONFIG_PROFILE": "DEFAULT"
+      },
+      "disabled": false
     }
+  }
 }
 ```
 

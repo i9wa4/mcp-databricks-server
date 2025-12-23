@@ -1,42 +1,29 @@
 # Contributing
 
-## Development Setup
+## 1. Development Setup
 
-### Prerequisites
+### 1.1. Prerequisites
 
-- Python 3.10+
+- Python 3.11+
 - [mise](https://mise.jdx.dev/getting-started.html)
 
-### Setup
+### 1.2. Setup
 
 ```bash
-# Install tools
-mise install
-
-# Sync dependencies
-mise run sync
+# Install pre-commit hooks
+mise exec -- pre-commit install
 ```
 
-## Testing
+## 2. Testing
 
 ```bash
 mise run test
 ```
 
-## Linting and Formatting
+## 3. Linting and Formatting
+
+Automatically run via pre-commit. To run manually:
 
 ```bash
-uv run ruff check src tests
-uv run ruff format src tests
-uv run mypy src
-```
-
-## Pre-commit
-
-```bash
-# Install hooks
-pre-commit install
-
-# Run manually
-pre-commit run --all-files
+mise exec -- pre-commit run --all-files
 ```

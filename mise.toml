@@ -16,10 +16,6 @@ pre-commit = "4.5.1"
 # Cargo Tools
 "cargo:rumdl" = "0.0.194"
 
-[tasks.sync]
-description = "Sync Python dependencies with uv"
-run = "mise exec -- uv sync"
-
 [tasks.test]
 description = "Run tests with pytest"
 run = "mise exec -- uv run pytest"

@@ -41,7 +41,6 @@ jobs:
       - name: Install mise
         uses: jdx/mise-action@v2
         with:
-          install_args: --yes
           cache: true
 
       - name: Cache pre-commit
@@ -80,7 +79,6 @@ jobs:
       - name: Install mise
         uses: jdx/mise-action@v2
         with:
-          install_args: --yes
           cache: true
 
       - name: Install dependencies

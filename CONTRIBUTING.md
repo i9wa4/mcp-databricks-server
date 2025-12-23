@@ -1,10 +1,9 @@
-# Contributing
+# CONTRIBUTING
 
 ## 1. Development Setup
 
 ### 1.1. Prerequisites
 
-- Python 3.11+
 - [mise](https://mise.jdx.dev/getting-started.html)
 
 ### 1.2. Setup

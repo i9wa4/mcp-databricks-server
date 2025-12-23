@@ -4,6 +4,7 @@
     "config:recommended",
     ":enablePreCommit"
   ],
+  "forkProcessing": "enabled",
   "lockFileMaintenance": {
     "enabled": true
   }

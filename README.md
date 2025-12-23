@@ -39,9 +39,9 @@ cd mcp-databricks-server
 
 ### 2.3. Configure Databricks Authentication
 
-Authentication is handled by the Databricks SDK using `~/.databrickscfg`.
+Create `~/.databrickscfg` for authentication.
 
-Example `~/.databrickscfg`:
+Example:
 
 ```ini
 # Personal Access Token
@@ -61,8 +61,6 @@ client_id = your_client_id
 client_secret = your_client_secret
 warehouse_id = your_warehouse_id
 ```
-
-See [Databricks CLI authentication](https://docs.databricks.com/en/dev-tools/cli/authentication.html) for more details.
 
 ## 3. Running
 

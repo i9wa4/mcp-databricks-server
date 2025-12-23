@@ -1,6 +1,6 @@
 # Databricks MCP Server
 
-MCP server for executing SQL queries against Databricks.
+MCP server for executing SQL queries on Databricks.
 
 ## 1. Features
 
@@ -8,6 +8,8 @@ MCP server for executing SQL queries against Databricks.
 - List available schemas in a catalog
 - List tables in a schema
 - Describe table schemas
+- Unity Catalog metadata exploration (catalogs, schemas, tables)
+- Table lineage information (upstream/downstream tables, notebooks)
 
 ## 2. Setup
 
@@ -41,7 +43,7 @@ DATABRICKS_CLIENT_SECRET=your-client-secret
 
 ## 3. Running
 
-Example MCP configuration:
+Example MCP Server configuration:
 
 ```json
 {
@@ -59,13 +61,6 @@ Example MCP configuration:
 }
 ```
 
-## 4. Available Tools
-
-- `execute_sql_query_in_databricks(sql)`: Execute a SQL query
-- `list_schemas_in_databricks(catalog)`: List schemas in a catalog
-- `list_tables_in_databricks(schema)`: List tables in a schema
-- `describe_table_in_databricks(table_name)`: Describe a table's schema
-
-## 5. Contributing
+## 4. Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md).

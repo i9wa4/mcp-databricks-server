@@ -78,6 +78,10 @@ Example MCP Server configuration:
 }
 ```
 
+`DATABRICKS_CONFIG_PROFILE` environment variable is optional.
+If set in the MCP config above, it overrides any system environment variable.
+If not set anywhere, the `DEFAULT` profile from `~/.databrickscfg` is used.
+
 ## 4. Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md).

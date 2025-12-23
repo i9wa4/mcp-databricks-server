@@ -29,7 +29,6 @@ DATABRICKS_TOKEN = os.environ.get("DATABRICKS_TOKEN")
 DATABRICKS_SQL_WAREHOUSE_ID = os.environ.get("DATABRICKS_SQL_WAREHOUSE_ID")
 DATABRICKS_CLIENT_ID = os.environ.get("DATABRICKS_CLIENT_ID")
 DATABRICKS_CLIENT_SECRET = os.environ.get("DATABRICKS_CLIENT_SECRET")
-DATABRICKS_AUTH_TYPE = os.environ.get("DATABRICKS_AUTH_TYPE")
 
 
 def _get_sdk_client() -> WorkspaceClient:
@@ -38,12 +37,8 @@ def _get_sdk_client() -> WorkspaceClient:
         msg = "DATABRICKS_HOST must be set in environment variables or .env file"
         raise ValueError(msg)
 
-    is_oauth = (
-        DATABRICKS_AUTH_TYPE == "oauth"
-        and DATABRICKS_CLIENT_ID
-        and DATABRICKS_CLIENT_SECRET
-    )
-    if is_oauth:
+    # OAuth M2M (Service Principal) takes precedence if both credentials are set
+    if DATABRICKS_CLIENT_ID and DATABRICKS_CLIENT_SECRET:
         config = Config(
             host=DATABRICKS_HOST,
             client_id=DATABRICKS_CLIENT_ID,

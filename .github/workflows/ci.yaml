@@ -1,0 +1,108 @@
+name: CI
+run-name: ${{ github.event_name }} on ${{ github.ref_name }} by @${{ github.actor }}
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+    types:
+      - opened
+      - synchronize
+      - reopened
+
+permissions: {}
+
+defaults:
+  run:
+    shell: bash
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ github.event_name == 'pull_request' && github.head_ref || github.ref_name }}
+          persist-credentials: false
+
+      - name: Install mise
+        uses: jdx/mise-action@c37c93293d6b742fc901e1406b8f764f6fb19dac # v2.4.4
+        with:
+          cache: true
+
+      - name: Cache pre-commit
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ~/.cache/pre-commit
+          key: pre-commit-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.pre-commit-config.yaml') }}
+          restore-keys: |
+            pre-commit-${{ runner.os }}-${{ runner.arch }}-
+
+      - name: Install dependencies
+        run: |
+          mise exec -- uv sync
+
+      - name: Run pre-commit
+        run: |
+          mise exec -- pre-commit run --all-files
+
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12", "3.13", "3.14"]
+      fail-fast: false
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ github.event_name == 'pull_request' && github.head_ref || github.ref_name }}
+          persist-credentials: false
+
+      - name: Install mise
+        uses: jdx/mise-action@c37c93293d6b742fc901e1406b8f764f6fb19dac # v2.4.4
+        with:
+          cache: true
+
+      - name: Install dependencies
+        run: |
+          mise exec -- uv sync --python ${{ matrix.python-version }}
+
+      - name: Run tests
+        run: |
+          mise exec -- uv run --python ${{ matrix.python-version }} pytest
+
+  ci:
+    needs: [lint, test]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check results
+        run: |
+          if [[ "${{ contains(needs.*.result, 'failure') }}" == "true" ]]; then
+            echo "One or more jobs failed"
+            exit 1
+          fi
+          if [[ "${{ contains(needs.*.result, 'cancelled') }}" == "true" ]]; then
+            echo "One or more jobs were cancelled"
+            exit 1
+          fi
+          echo "All checks passed"

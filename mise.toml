@@ -1,0 +1,21 @@
+[tools]
+# Package managers
+uv = "0.9.18"
+
+# Development tools
+pre-commit = "4.5.1"
+
+# Aqua Tools
+"aqua:gitleaks/gitleaks"       = "8.30.0"
+"aqua:rhysd/actionlint"        = "1.7.9"
+"aqua:suzuki-shunsuke/ghalint" = "1.5.4"
+"aqua:suzuki-shunsuke/ghatm"   = "1.0.0"
+"aqua:suzuki-shunsuke/pinact"  = "3.6.0"
+"aqua:zizmorcore/zizmor"       = "1.19.0"
+
+# Cargo Tools
+"cargo:rumdl" = "0.0.194"
+
+[tasks.test]
+description = "Run tests with pytest"
+run = "mise exec -- uv run pytest"

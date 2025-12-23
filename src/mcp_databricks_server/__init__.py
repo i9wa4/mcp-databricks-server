@@ -6,8 +6,7 @@ import asyncio
 
 from mcp.server.fastmcp import FastMCP
 
-from mcp_databricks_server.dbapi import execute_statement
-from mcp_databricks_server.formatter import format_query_results
+from mcp_databricks_server.formatter import format_sdk_results
 from mcp_databricks_server.sdk_utils import (
     execute_databricks_sql,
     get_uc_all_catalogs_summary,
@@ -21,6 +20,22 @@ __all__ = ["main", "mcp"]
 mcp = FastMCP("databricks")
 
 
+def _format_sql_result(result: dict[str, object]) -> str:
+    """Format SQL execution result."""
+    status = result.get("status")
+    if status == "success":
+        return format_sdk_results(result)
+    elif status == "failed":
+        error_message = result.get("error", "Unknown query execution error.")
+        details = result.get("details", "")
+        if details:
+            return f"SQL Query Failed: {error_message}\nDetails: {details}"
+        return f"SQL Query Failed: {error_message}"
+    else:
+        error_message = result.get("error", "Unknown error during SQL execution.")
+        return f"Error: {error_message}"
+
+
 @mcp.tool()
 async def execute_sql_query_in_databricks(sql: str) -> str:
     """Execute a SQL query on Databricks and return the results.
@@ -29,8 +44,8 @@ async def execute_sql_query_in_databricks(sql: str) -> str:
         sql: The SQL query to execute
     """
     try:
-        result = await execute_statement(sql)
-        return format_query_results(result)
+        result = await asyncio.to_thread(execute_databricks_sql, sql)
+        return _format_sql_result(result)
     except Exception as e:
         return f"Error executing SQL query: {e!s}"
 
@@ -44,8 +59,8 @@ async def list_schemas_in_databricks(catalog: str) -> str:
     """
     sql = f"SHOW SCHEMAS IN {catalog}"
     try:
-        result = await execute_statement(sql)
-        return format_query_results(result)
+        result = await asyncio.to_thread(execute_databricks_sql, sql)
+        return _format_sql_result(result)
     except Exception as e:
         return f"Error listing schemas: {e!s}"
 
@@ -59,8 +74,8 @@ async def list_tables_in_databricks(schema: str) -> str:
     """
     sql = f"SHOW TABLES IN {schema}"
     try:
-        result = await execute_statement(sql)
-        return format_query_results(result)
+        result = await asyncio.to_thread(execute_databricks_sql, sql)
+        return _format_sql_result(result)
     except Exception as e:
         return f"Error listing tables: {e!s}"
 
@@ -74,8 +89,8 @@ async def describe_table_in_databricks(table_name: str) -> str:
     """
     sql = f"DESCRIBE TABLE {table_name}"
     try:
-        result = await execute_statement(sql)
-        return format_query_results(result)
+        result = await asyncio.to_thread(execute_databricks_sql, sql)
+        return _format_sql_result(result)
     except Exception as e:
         return f"Error describing table: {e!s}"
 
@@ -160,34 +175,6 @@ async def describe_uc_table(
         )
     except Exception as e:
         return f"Error getting table details for '{full_table_name}': {e!s}"
-
-
-@mcp.tool()
-async def execute_sql_with_sdk(sql: str) -> str:
-    """Execute a SQL query using Databricks SDK and return formatted results.
-
-    This is an alternative to execute_sql_query_in_databricks that uses the
-    Databricks SDK directly. Use this when you need SDK-specific features.
-
-    Args:
-        sql: The SQL query to execute
-    """
-    try:
-        result = await asyncio.to_thread(execute_databricks_sql, sql)
-        status = result.get("status")
-        if status == "success":
-            from mcp_databricks_server.formatter import format_sdk_results
-
-            return format_sdk_results(result)
-        elif status == "failed":
-            error_message = result.get("error", "Unknown query execution error.")
-            details = result.get("details", "No additional details provided.")
-            return f"SQL Query Failed: {error_message}\nDetails: {details}"
-        else:
-            error_message = result.get("error", "Unknown error during SQL execution.")
-            return f"Error: {error_message}"
-    except Exception as e:
-        return f"Error executing SQL query: {e!s}"
 
 
 def main() -> None:

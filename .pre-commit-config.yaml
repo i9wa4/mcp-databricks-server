@@ -36,7 +36,7 @@ repos:
 
       - id: ghatm
         name: ghatm
-        entry: mise exec -- ghatm run
+        entry: mise exec -- ghatm set
         language: system
         files: ^\.github/workflows/.*\.(yml|yaml)$
         pass_filenames: false

@@ -49,9 +49,7 @@ def test_format_query_results_no_rows() -> None:
                 ]
             }
         },
-        "result": {
-            "data_array": []
-        },
+        "result": {"data_array": []},
     }
 
     output = format_query_results(result)

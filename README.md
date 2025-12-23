@@ -1,8 +1,10 @@
 # Databricks MCP Server
 
-This is a Model Context Protocol (MCP) server for executing SQL queries against Databricks using the Statement Execution API.
+This is a Model Context Protocol (MCP) server for executing SQL queries
+against Databricks using the Statement Execution API.
 It can retrieve data by performing SQL requests using the Databricks API.
-When used in an Agent mode, it can successfully iterate over a number of requests to perform complex tasks.
+When used in an Agent mode, it can successfully iterate over a number of
+requests to perform complex tasks.
 It is even better when coupled with Unity Catalog Metadata.
 
 ## 1. Features
@@ -29,7 +31,8 @@ cd mcp-databricks-server
 
 #### 2.2.1. Option 1: Using uv (Recommended)
 
-If you have [uv](https://docs.astral.sh/uv/getting-started/installation/) installed:
+If you have [uv](https://docs.astral.sh/uv/getting-started/installation/)
+installed:
 
 ```bash
 uv sync
@@ -77,21 +80,33 @@ You can find your SQL warehouse ID in the Databricks UI under SQL Warehouses.
 
 Before using this MCP server, ensure that:
 
-1. **SQL Warehouse Permissions**: The user associated with the provided token must have appropriate permissions to access the specified SQL warehouse. You can configure warehouse permissions in the Databricks UI under SQL Warehouses > [Your Warehouse] > Permissions.
+1. **SQL Warehouse Permissions**:
+   The user associated with the provided token must have appropriate
+   permissions to access the specified SQL warehouse.
+   You can configure warehouse permissions in the Databricks UI under
+   SQL Warehouses > [Your Warehouse] > Permissions.
 
-2. **Token Permissions**: The personal access token (or OAuth access token) used should have the minimum necessary permissions to perform the required operations. It is strongly recommended to:
-   - Create a dedicated token specifically for this application
-   - Grant read-only permissions where possible to limit security risks
-   - Avoid using tokens with workspace-wide admin privileges
+2. **Token Permissions**:
+   The personal access token (or OAuth access token) used should have the
+   minimum necessary permissions to perform the required operations.
+   It is strongly recommended to:
+    - Create a dedicated token specifically for this application
+    - Grant read-only permissions where possible to limit security risks
+    - Avoid using tokens with workspace-wide admin privileges
 
-3. **Data Access Permissions**: The user associated with the token must have appropriate permissions to access the catalogs, schemas, and tables that will be queried.
+3. **Data Access Permissions**:
+   The user associated with the token must have appropriate permissions
+   to access the catalogs, schemas, and tables that will be queried.
 
 To set SQL warehouse permissions via the Databricks REST API, you can use:
 
-- `GET /api/2.0/sql/permissions/warehouses/{warehouse_id}` to check current permissions
-- `PATCH /api/2.0/sql/permissions/warehouses/{warehouse_id}` to update permissions
+- `GET /api/2.0/sql/permissions/warehouses/{warehouse_id}`
+  to check current permissions
+- `PATCH /api/2.0/sql/permissions/warehouses/{warehouse_id}`
+  to update permissions
 
-For security best practices, consider regularly rotating your access tokens and auditing query history to monitor usage.
+For security best practices, consider regularly rotating your access tokens
+and auditing query history to monitor usage.
 
 ## 4. Running the Server
 
@@ -117,13 +132,16 @@ Or using Python module:
 python -m mcp_databricks_server
 ```
 
-This will start the MCP server using stdio transport, which can be used with Agent Composer or other MCP clients.
+This will start the MCP server using stdio transport, which can be used with
+Agent Composer or other MCP clients.
 
 ### 4.2. Using with Cursor
 
-To use this MCP server with [Cursor](https://cursor.sh/), you need to configure it in your Cursor settings:
+To use this MCP server with [Cursor](https://cursor.sh/), you need to
+configure it in your Cursor settings:
 
-1. Create a `.cursor` directory in your home directory if it doesn't already exist
+1. Create a `.cursor` directory in your home directory if it doesn't
+   already exist
 2. Create or edit the `mcp.json` file in that directory:
 
 ```bash
@@ -131,7 +149,8 @@ mkdir -p ~/.cursor
 touch ~/.cursor/mcp.json
 ```
 
-1. Add the following configuration to the `mcp.json` file, replacing the directory path with the actual path to where you've installed this server:
+1. Add the following configuration to the `mcp.json` file, replacing the
+   directory path with the actual path to where you've installed this server:
 
 Using uv:
 
@@ -178,19 +197,22 @@ Using Python module:
 
 1. Restart Cursor to apply the changes
 
-Now you can use the Databricks MCP server directly within Cursor's AI assistant.
+Now you can use the Databricks MCP server directly within Cursor's
+AI assistant.
 
 ## 5. Available Tools
 
 The server provides the following tools:
 
-1. `execute_sql_query_in_databricks`: Execute a SQL query and return the results
+1. `execute_sql_query_in_databricks`:
+   Execute a SQL query and return the results
 
    ```text
    execute_sql_query_in_databricks(sql: str) -> str
    ```
 
-2. `list_schemas_in_databricks`: List all available schemas in a specific catalog
+2. `list_schemas_in_databricks`:
+   List all available schemas in a specific catalog
 
    ```text
    list_schemas_in_databricks(catalog: str) -> str
@@ -221,7 +243,11 @@ describe_table_in_databricks("my_catalog.my_schema.my_table")
 
 ## 7. Handling Long-Running Queries
 
-The server is designed to handle long-running queries by polling the Databricks API until the query completes or times out. The default timeout is 10 minutes (60 retries with 10-second intervals), which can be adjusted in the `src/mcp_databricks_server/dbapi.py` file if needed.
+The server is designed to handle long-running queries by polling the
+Databricks API until the query completes or times out.
+The default timeout is 10 minutes (60 retries with 10-second intervals),
+which can be adjusted in the `src/mcp_databricks_server/dbapi.py` file
+if needed.
 
 ## 8. Contributing
 

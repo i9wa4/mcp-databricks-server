@@ -28,13 +28,12 @@ Built with [Databricks SDK for Python](https://docs.databricks.com/en/dev-tools/
 
 ### 2.1. Install uv
 
-See [uv installation guide](https://docs.astral.sh/uv/getting-started/installation/).
+See uv installation guide: <https://docs.astral.sh/uv/getting-started/installation/>.
 
 ### 2.2. Clone
 
 ```bash
 git clone https://github.com/i9wa4/mcp-databricks-server
-cd mcp-databricks-server
 ```
 
 ### 2.3. Configure Databricks Authentication

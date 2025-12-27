@@ -79,6 +79,17 @@ jobs:
         with:
           cache: true
 
+      - name: Cache
+        uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb # v5.0.1
+        with:
+          path: |
+            ~/.cache/uv
+            .venv
+          key: |
+            cache-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('uv.lock') }}
+          restore-keys: |
+            cache-${{ runner.os }}-${{ runner.arch }}-
+
       - name: Run tests
         run: |
           mise exec -- uv run --python ${{ matrix.python-version }} pytest

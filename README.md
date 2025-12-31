@@ -4,6 +4,8 @@ MCP server for executing SQL queries on Databricks.
 
 Built with [Databricks SDK for Python](https://docs.databricks.com/en/dev-tools/sdk-python.html).
 
+Forked from <https://github.com/RafaelCartenet/mcp-databricks-server>.
+
 ## 1. Features
 
 - Execute SQL queries on Databricks

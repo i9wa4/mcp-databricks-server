@@ -1,6 +1,6 @@
 [tools]
 # Package managers
-uv = "0.10.2"
+uv = "0.10.4"
 
 # Development tools
 pre-commit = "4.5.1"
@@ -14,7 +14,7 @@ pre-commit = "4.5.1"
 "aqua:zizmorcore/zizmor"       = "1.22.0"
 
 # Cargo Tools
-"github:rvben/rumdl" = "0.1.21"
+"github:rvben/rumdl" = "0.1.23"
 
 [tasks.test]
 description = "Run tests with pytest"

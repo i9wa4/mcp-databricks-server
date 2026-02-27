@@ -8,5 +8,6 @@
   "lockFileMaintenance": {
     "enabled": true
   },
-  "minimumReleaseAge": "7 days"
+  "minimumReleaseAge": "7 days",
+  "internalChecksFilter": "strict"
 }

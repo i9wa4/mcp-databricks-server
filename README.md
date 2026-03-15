@@ -2,7 +2,8 @@
 
 MCP server for executing SQL queries on Databricks.
 
-Built with [Databricks SDK for Python](https://docs.databricks.com/en/dev-tools/sdk-python.html).
+Built with
+[Databricks SDK for Python](https://docs.databricks.com/en/dev-tools/sdk-python.html).
 
 Forked from <https://github.com/RafaelCartenet/mcp-databricks-server>.
 
@@ -15,22 +16,23 @@ Forked from <https://github.com/RafaelCartenet/mcp-databricks-server>.
 - Unity Catalog metadata exploration (catalogs, schemas, tables)
 - Table lineage information (upstream/downstream tables, notebooks)
 - Block dangerous SQL commands for safety. The following statements are blocked:
-    - DROP
-    - DELETE
-    - TRUNCATE
-    - ALTER
-    - CREATE
-    - INSERT
-    - UPDATE
-    - MERGE
-    - GRANT
-    - REVOKE
+  - DROP
+  - DELETE
+  - TRUNCATE
+  - ALTER
+  - CREATE
+  - INSERT
+  - UPDATE
+  - MERGE
+  - GRANT
+  - REVOKE
 
 ## 2. Setup
 
 ### 2.1. Install uv
 
-See uv installation guide: <https://docs.astral.sh/uv/getting-started/installation/>.
+See uv installation guide:
+<https://docs.astral.sh/uv/getting-started/installation/>.
 
 ### 2.2. Clone
 

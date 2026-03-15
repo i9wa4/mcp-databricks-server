@@ -99,3 +99,9 @@ cython_debug/
 # Cursor
 .cursorignore
 .cursorindexingignore
+
+# Nix
+.direnv/
+/result
+/result-*
+.pre-commit-config.yaml

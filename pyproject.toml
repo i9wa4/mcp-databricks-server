@@ -11,7 +11,7 @@ license = "MIT"
 requires-python = ">=3.11"
 dependencies = [
     "databricks-sdk>=0.76.0",
-    "mcp[cli]>=1.25.0",
+    "mcp[cli]>=1.27.0",
 ]
 
 [project.scripts]
@@ -20,9 +20,9 @@ mcp-databricks-server = "mcp_databricks_server:main"
 [dependency-groups]
 dev = [
     "mypy>=1.19.0",
-    "pytest>=9.0.0",
+    "pytest>=9.0.3",
     "pytest-cov>=7.0.0",
-    "ruff>=0.14.0",
+    "ruff>=0.15.10",
 ]
 
 [tool.ruff]

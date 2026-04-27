@@ -10,7 +10,7 @@ readme = "README.md"
 license = "MIT"
 requires-python = ">=3.11"
 dependencies = [
-    "databricks-sdk>=0.76.0",
+    "databricks-sdk>=0.103.0",
     "mcp[cli]>=1.27.0",
 ]
 
@@ -19,7 +19,7 @@ mcp-databricks-server = "mcp_databricks_server:main"
 
 [dependency-groups]
 dev = [
-    "mypy>=1.20.1",
+    "mypy>=1.20.2",
     "pytest>=9.0.3",
     "pytest-cov>=7.0.0",
     "ruff>=0.15.11",

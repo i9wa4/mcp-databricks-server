@@ -20,7 +20,7 @@ mcp-databricks-server = "mcp_databricks_server:main"
 [dependency-groups]
 dev = [
     "mypy>=2.1.0",
-    "pytest>=9.1.0",
+    "pytest>=9.1.1",
     "pytest-cov>=7.0.0",
     "ruff>=0.15.18",
 ]
